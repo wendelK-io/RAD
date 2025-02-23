@@ -1,20 +1,34 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 
-post_list = [{
-        "id":1,
-        "title": "Pie",
-        "image": "http://image_sample",
-        "description": "some text"
-    },
-    {
-        "id":2,
-        "title": "Cake",
-        "image": "http://image_sample",
-        "description": "some text"
-    }
-]
+# Add the db
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app_blog.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+# Initialize db
+db = SQLAlchemy(app)
+
+# Posts model
+class Posts(db.Model):
+    __tablename__ = "posts"
+
+    id = db.Column(db.Integer, primary_key = True)
+    title = db.Column(db.String(30), nullable = False, unique = True)
+    image = db.Column(db.String(255), nullable = False)
+    description = db.Column(db.String(2000))
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "image": self.image,
+            "description": self.description,
+        }
+
+with app.app_context():
+    db.create_all()
 
 @app.route("/<path:invalid_path>")
 def handle_invalid_path(invalid_path):
@@ -24,9 +38,21 @@ def handle_invalid_path(invalid_path):
 def index():
     return "Hello, World!"
 
-@app.route("/posts")
+@app.route("/posts", methods = ["GET", "POST"])
 def posts():
-    return jsonify(post_list)
+    if request.method == "GET":
+        data = Posts.query.all()
+        post_list = [post.to_dict() for post in data]
+        return jsonify(post_list)
+    
+    if request.method == "POST":
+        data = request.get_json()
+        
+        new_post = Posts(title = data["title"], image = data["image"], description = data["description"])
+
+        db.session.add(new_post)
+        db.session.commit()
+        return "success", 201
 
 @app.route("/posts/<id>")
 def getPostByID(id):
