@@ -61,9 +61,10 @@ def getPostByID(id):
 
     id = int(id)
 
-    for item in post_list:
-        if id == item["id"]:
-            response = item
+    posts = Posts.query.all()
+    for item in posts:
+        if id == item.id:
+            response = item.to_dict()
             return jsonify(response)
 
     return jsonify({"error": "Post not found"}), 404 
