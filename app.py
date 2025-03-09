@@ -54,19 +54,22 @@ def posts():
         db.session.commit()
         return "success", 201
 
-@app.route("/posts/<id>")
+@app.route("/posts/<id>", methods=["GET", "DELETE"])
 def getPostByID(id):
     if not id.isdigit():
         return jsonify({"error": "not a valid id"}), 400
 
     id = int(id)
-
-    posts = Posts.query.all()
-    for item in posts:
-        if id == item.id:
-            response = item.to_dict()
-            return jsonify(response)
-
+    post = Posts.query.get(id)
+    if posts:
+        if request.method == "GET":
+            return jsonify(post.to_dict())
+        
+        if request.method == "DELETE":
+            db.session.delete(post)
+            db.session.commit()
+            return "Deleted", 200
+        
     return jsonify({"error": "Post not found"}), 404 
 
 if __name__ == "__main__":
