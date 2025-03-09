@@ -73,7 +73,7 @@ def postByID(id):
 
     id = int(id)
     post = Posts.query.get(id)
-    if posts:
+    if post:
         if request.method == "GET":
             return jsonify(post.to_dict())
         
