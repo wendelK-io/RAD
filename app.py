@@ -84,5 +84,25 @@ def postByID(id):
         
     return jsonify({"error": "Post not found"}), 404 
 
+
+@app.route("/posts/<id>", methods = ["PUT"])
+def updatePost(id):
+    if request.method == "PUT":
+        if not id.isdigit():
+            return jsonify({"error": "not a valid id"}), 400
+
+        id = int(id)
+        post = Posts.query.get(id)
+        data = request.get_json()
+        if post:
+            for key, value in data.items():
+                if hasattr(post, key):  
+                    setattr(post, key, value)
+
+            db.session.commit() 
+            return jsonify({"message": "Post updated"}), 200
+        
+        return jsonify({"error": "Post not found"}), 404 
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)
