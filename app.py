@@ -46,16 +46,28 @@ def posts():
         return jsonify(post_list)
     
     if request.method == "POST":
-        data = request.get_json()
         
-        new_post = Posts(title = data["title"], image = data["image"], description = data["description"])
+        data = request.get_json()
+
+        required_fields = ["title", "image"]
+
+        missing_fields = [field for field in required_fields if field not in data]
+
+        if missing_fields:
+            return jsonify({"error": f"Missing fields: {', '.join(missing_fields)}"}), 400
+
+        new_post = Posts(
+            title = data["title"],
+            image = data["image"],
+            description = data.get("description")
+        )
 
         db.session.add(new_post)
         db.session.commit()
         return "success", 201
 
 @app.route("/posts/<id>", methods=["GET", "DELETE"])
-def getPostByID(id):
+def postByID(id):
     if not id.isdigit():
         return jsonify({"error": "not a valid id"}), 400
 
